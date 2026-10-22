@@ -60,7 +60,7 @@ export async function buildEdition() {
 
   const judged = await openai.responses.create({
     model: 'openai/gpt-6.1-sol',
-    reasoning: { effort: 'high' },
+    reasoning: { effort: 'medium' },
     input: `${CRITIC_PROMPT}\n\nCandidates:\n${discovery.output_text}\n\nCited URLs from discovery:\n${JSON.stringify(cited)}\n\nSource priors:\n${JSON.stringify(SOURCES)}`,
     text: {
       format: {
