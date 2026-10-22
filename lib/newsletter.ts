@@ -11,6 +11,8 @@ function getClient() {
   return new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     baseURL: 'https://openrouter.ai/api/v1',
+    timeout: 60_000,
+    maxRetries: 1,
   });
 }
 
@@ -37,31 +39,31 @@ export async function buildEdition() {
 
   const openai = getClient();
   const discovery = await openai.responses.create({
-  model: 'openai/gpt-6-luna',
-  reasoning: { effort: 'medium' },
-  tools: [
-    {
-      type: 'openrouter:web_search',
-    } as any,
-  ],
-  tool_choice: 'required',
-  input: `${DISCOVERY_PROMPT}\nToday is ${new Date().toISOString()}. Source priors:\n${JSON.stringify(SOURCES)}`,
-});
+    model: 'openai/gpt-6-luna',
+    reasoning: { effort: 'medium' },
+    tools: [
+      {
+        type: 'openrouter:web_search',
+      } as any,
+    ],
+    tool_choice: 'required',
+    input: `${DISCOVERY_PROMPT}\nToday is ${new Date().toISOString()}. Source priors:\n${JSON.stringify(SOURCES)}`,
+  });
 
   const cited = extractUrls(discovery);
   const judged = await openai.responses.create({
-  model: 'openai/gpt-6.1-sol',
-  reasoning: { effort: 'high' },
-  input: `${CRITIC_PROMPT}\n\nCandidates:\n${discovery.output_text}\n\nCited URLs from discovery:\n${JSON.stringify(cited)}\n\nSource priors:\n${JSON.stringify(SOURCES)}`,
-  text: {
-    format: {
-      type: 'json_schema',
-      name: 'newsletter_edition',
-      strict: true,
-      schema: newsletterSchema as any,
+    model: 'openai/gpt-6.1-sol',
+    reasoning: { effort: 'high' },
+    input: `${CRITIC_PROMPT}\n\nCandidates:\n${discovery.output_text}\n\nCited URLs from discovery:\n${JSON.stringify(cited)}\n\nSource priors:\n${JSON.stringify(SOURCES)}`,
+    text: {
+      format: {
+        type: 'json_schema',
+        name: 'newsletter_edition',
+        strict: true,
+        schema: newsletterSchema as any,
+      },
     },
-  },
-});
+  });
 
   return JSON.parse(judged.output_text);
 }
