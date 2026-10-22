@@ -11,7 +11,7 @@ function getClient() {
   return new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     baseURL: 'https://openrouter.ai/api/v1',
-    timeout: 60_000,
+    timeout: 180_000,
     maxRetries: 1,
   });
 }
@@ -38,6 +38,9 @@ export async function buildEdition() {
   }
 
   const openai = getClient();
+
+  console.log('Signal AI: starting discovery');
+
   const discovery = await openai.responses.create({
     model: 'openai/gpt-6-luna',
     reasoning: { effort: 'medium' },
@@ -46,11 +49,15 @@ export async function buildEdition() {
         type: 'openrouter:web_search',
       } as any,
     ],
-    tool_choice: 'required',
     input: `${DISCOVERY_PROMPT}\nToday is ${new Date().toISOString()}. Source priors:\n${JSON.stringify(SOURCES)}`,
   });
 
+  console.log('Signal AI: discovery complete');
+
   const cited = extractUrls(discovery);
+
+  console.log('Signal AI: starting critic');
+
   const judged = await openai.responses.create({
     model: 'openai/gpt-6.1-sol',
     reasoning: { effort: 'high' },
@@ -64,6 +71,8 @@ export async function buildEdition() {
       },
     },
   });
+
+  console.log('Signal AI: critic complete');
 
   return JSON.parse(judged.output_text);
 }

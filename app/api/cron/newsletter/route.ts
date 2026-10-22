@@ -17,8 +17,7 @@ export async function GET(req: Request) {
   }
 
   if (
-    req.headers.get('authorization') !==
-    `Bearer ${process.env.CRON_SECRET}`
+    req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`
   ) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -43,27 +42,31 @@ export async function GET(req: Request) {
   }
 
   try {
+    console.log('Signal AI: starting generation');
+
     const edition = await buildEdition();
+
+    console.log('Signal AI: generation complete');
+
     const html = renderHtml(edition);
+
+    console.log('Signal AI: creating Resend draft');
 
     const resend = new Resend(process.env.RESEND_API_KEY!);
 
     const { data, error } = await resend.broadcasts.create({
       segmentId: process.env.RESEND_SEGMENT_ID!,
       from: process.env.RESEND_FROM!,
-      subject:
-        edition.editionTitle ||
-        'Signal AI: 5 AI reads worth your time',
+      subject: edition.editionTitle || 'Signal AI: 5 AI reads worth your time',
       html,
     });
+
+    console.log('Signal AI: Resend draft request complete');
 
     if (error) {
       console.error('Resend broadcast creation failed', error);
 
-      return NextResponse.json(
-        { ok: false, error },
-        { status: 502 },
-      );
+      return NextResponse.json({ ok: false, error }, { status: 502 });
     }
 
     return NextResponse.json({
@@ -81,10 +84,7 @@ export async function GET(req: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 },
     );
