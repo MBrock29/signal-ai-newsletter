@@ -81,7 +81,7 @@ export function renderHtml(edition: any) {
   const items = edition.items
     .map(
       (x: any, i: number) =>
-        `<section style="margin:0 0 48px"><div style="font:600 12px Arial;color:#697386;text-transform:uppercase;letter-spacing:.08em">${i + 1} · ${x.publisher} · ${x.category}</div><h2 style="font:700 26px Arial;margin:8px 0"><a href="${x.url}" style="color:#111827;text-decoration:none">${x.title}</a></h2><div style="font:14px Arial;color:#6b7280;margin-bottom:14px">${x.publishedAt} · editor score ${x.score}/30</div><p style="font:16px/1.65 Arial;color:#1f2937">$${x.summary
+        `<section style="margin:0 0 48px"><div style="font:600 12px Arial;color:#697386;text-transform:uppercase;letter-spacing:.08em">${i + 1} · ${x.publisher} · ${x.category}</div><h2 style="font:700 26px Arial;margin:8px 0"><a href="${x.url}" style="color:#111827;text-decoration:none">${x.title}</a></h2><div style="font:14px Arial;color:#6b7280;margin-bottom:14px">${x.publishedAt} · editor score ${x.score}/30</div><p style="font:16px/1.65 Arial;color:#1f2937">${x.summary
           .split(/\n\s*\n/)
           .map(
             (paragraph: string) =>
