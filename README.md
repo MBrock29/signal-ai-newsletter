@@ -1,5 +1,7 @@
 # Signal AI
 
+**Live:** [signal-ai-newsletter-89gd.vercel.app](https://signal-ai-newsletter-89gd.vercel.app/)
+
 **Five worthwhile AI reads. About 15 minutes.**
 
 Signal AI is a twice-weekly AI newsletter designed for people who want to understand what is actually changing in AI without following the daily stream of launches, announcements and recycled commentary.
