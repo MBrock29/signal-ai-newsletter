@@ -57,7 +57,10 @@ export async function GET(req: Request) {
     const { data, error } = await resend.broadcasts.create({
       segmentId: process.env.RESEND_SEGMENT_ID!,
       from: process.env.RESEND_FROM!,
-      subject: edition.editionTitle || 'Signal AI: 5 AI reads worth your time',
+      subject: (edition.editionTitle || 'Signal AI: 5 AI reads worth your time')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim(),
       html,
     });
 
