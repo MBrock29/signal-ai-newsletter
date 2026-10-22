@@ -43,7 +43,7 @@ export async function buildEdition() {
 
   const discovery = await openai.responses.create({
     model: 'openai/gpt-6-luna',
-    reasoning: { effort: 'medium' },
+    reasoning: { effort: 'low' },
     tools: [
       {
         type: 'openrouter:web_search',
@@ -60,8 +60,18 @@ export async function buildEdition() {
 
   const judged = await openai.responses.create({
     model: 'openai/gpt-6.1-sol',
-    reasoning: { effort: 'medium' },
-    input: `${CRITIC_PROMPT}\n\nCandidates:\n${discovery.output_text}\n\nCited URLs from discovery:\n${JSON.stringify(cited)}\n\nSource priors:\n${JSON.stringify(SOURCES)}`,
+    reasoning: { effort: 'low' },
+    max_output_tokens: 5000,
+    input: `${CRITIC_PROMPT}
+
+Candidates:
+${discovery.output_text}
+
+Cited URLs from discovery:
+${JSON.stringify(cited)}
+
+Source priors:
+${JSON.stringify(SOURCES)}`,
     text: {
       format: {
         type: 'json_schema',

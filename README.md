@@ -1,117 +1,339 @@
 # Signal AI
 
-**Five AI reads. No slop.**
+**Five worthwhile AI reads. About 15 minutes.**
 
-Signal AI is a portfolio prototype for a twice-weekly AI newsletter that deliberately optimises for **evidence, teaching value and source diversity** instead of launch velocity and hype.
+Signal AI is a twice-weekly AI newsletter designed for people who want to understand what is actually changing in AI without following the daily stream of launches, announcements and recycled commentary.
 
-The personal production version runs as a ChatGPT Scheduled Task at no incremental API cost. This repository demonstrates the product UI and the underlying editorial/agent architecture without requiring paid infrastructure.
+Each edition selects exactly five stories and turns them into concise, evidence-led explanations covering what happened, why it matters, what can be learned from it and where the evidence is still weak.
 
-## What it demonstrates
+The goal is simple: **high signal, low noise, and enough technical depth to teach you something.**
 
-- A ranked **25-source allowlist** spanning independent evaluators, research labs and selected journalism.
-- A **Scout → Critic → Editor** workflow that separates discovery from judgement.
-- Explicit scoring and rejection criteria for AI-news quality.
-- Guardrails against launch spam, duplicate themes and single-company domination.
-- A public newsletter landing page with an email capture experience.
-- A complete ~15-minute sample edition.
-- A safe **portfolio mode** that makes no paid API or email calls.
+## The product
 
-## Editorial architecture
+AI news has a filtering problem rather than an information problem.
 
-### 1. Scout
-Find ~12–18 candidates from the allowlisted domains.
+There is an enormous amount of coverage, but much of it consists of:
 
-### 2. Critic
-Independently score candidates on evidence quality, consequence, teaching value, credibility/independence, specificity and explainability.
+- product launches with little evidence of impact;
+- company announcements repeated across multiple publications;
+- speculative claims about capabilities;
+- funding and partnership news with limited practical significance;
+- shallow summaries of research;
+- multiple stories about effectively the same development.
 
-### 3. Editor
-Select exactly five while enforcing source/company diversity.
+Signal AI takes the opposite approach.
 
-Read the full human-readable editorial contract in [`SKILL.md`](./SKILL.md) and the design rationale in [`docs/EDITORIAL_SYSTEM.md`](./docs/EDITORIAL_SYSTEM.md).
+Instead of trying to cover everything, it deliberately rejects most candidate stories and publishes only five.
 
-## Reading target
+Each edition targets approximately **15 minutes of total reading time**, with each story explaining:
 
-Each edition contains exactly five stories and targets **~15 minutes total reading time**, normally **350–500 words / 2–3 minutes per article**.
-
-Every article includes:
-- what happened and how it works;
-- concrete evidence/numbers where available;
+- what happened;
+- how it works;
+- the evidence or numbers behind it;
 - why it matters;
-- **What you can learn**;
-- a meaningful **Caveat**;
-- the original source.
+- **what you can learn** from it;
+- an important **caveat or limitation**;
+- a link to the original source.
 
-## Run locally — £0 mode
+## Editorial philosophy
 
-```bash
-cp .env.example .env.local
-npm install
-npm run dev
+Signal AI prioritises information that improves the reader's understanding of AI rather than simply keeping them aware of product announcements.
+
+### Prefer
+
+- original research;
+- independent model and system evaluations;
+- reproducible engineering lessons;
+- measurable changes in capability, cost or reliability;
+- safety and security findings;
+- data-rich analysis of AI economics;
+- consequential policy or business developments;
+- work that changes how practitioners should think about building with AI.
+
+### Reject by default
+
+- launch-only announcements;
+- routine integrations and partnerships;
+- fundraising news without wider strategic importance;
+- unsupported capability claims;
+- press-release rewrites;
+- SEO explainers and listicles;
+- duplicated themes;
+- stories whose main lesson is simply that a new product exists.
+
+Primary research from AI companies is useful, but company claims are treated as interested evidence rather than neutral conclusions.
+
+## How it works
+
+Signal AI uses a multi-stage AI editorial pipeline rather than asking a single model to "write an AI newsletter".
+
+### 1. Discovery
+
+A scout model searches a curated source pool and identifies roughly 10–12 potentially worthwhile developments.
+
+The source set deliberately mixes:
+
+- independent evaluators and researchers;
+- AI research labs;
+- technical writers;
+- specialist analysis;
+- high-quality technology and financial journalism.
+
+The discovery stage optimises for **recall**: finding potentially important material without deciding what deserves publication.
+
+### 2. Independent editorial judgement
+
+A second model receives the candidate set and acts as an independent critic and editor.
+
+Candidates are assessed across factors including:
+
+- evidence quality;
+- novelty and consequence;
+- teaching value;
+- source credibility and independence;
+- specificity;
+- whether the story can be explained meaningfully in a few minutes.
+
+The editor also applies portfolio-level constraints so an edition does not become five versions of the same story.
+
+For example:
+
+- at least two stories should come from independent/non-vendor sources;
+- no single company should dominate an edition;
+- primary research labs are intentionally limited;
+- duplicate themes are penalised;
+- launch stories require substantive evidence to survive selection.
+
+Exactly five stories are selected.
+
+### 3. Structured generation
+
+The selected edition is generated against a strict structured schema rather than relying on free-form model output.
+
+Each story contains fields for:
+
+- title;
+- publisher;
+- publication date;
+- category;
+- explanation;
+- teaching point;
+- caveat;
+- original URL.
+
+Structured output makes the generation layer easier to validate, render and evolve independently of the presentation layer.
+
+### 4. Email rendering and review
+
+The structured edition is converted into newsletter HTML and a draft broadcast is created through Resend.
+
+The current workflow intentionally keeps a **human in the loop**: generation and email preparation are automated, while the final edition can be reviewed before sending.
+
+This allows editorial quality to be inspected while the product and selection system are still being refined.
+
+## Technical architecture
+
+Signal AI is built with:
+
+- **Next.js / TypeScript** — application and API routes;
+- **OpenRouter** — model routing and AI inference;
+- **web-enabled model discovery** — current-source research;
+- **structured model output** — predictable newsletter data;
+- **Resend** — subscribers, topics and broadcast delivery;
+- **Vercel** — hosting, serverless execution and scheduled jobs;
+- **Vercel Cron** — twice-weekly automated edition generation.
+
+The production flow is approximately:
+
+```text
+Vercel Cron
+     │
+     ▼
+Discovery model + web search
+     │
+     ▼
+12–18 candidate stories
+     │
+     ▼
+Independent critic/editor
+     │
+     ▼
+Exactly 5 selected stories
+     │
+     ▼
+Structured newsletter JSON
+     │
+     ▼
+HTML renderer
+     │
+     ▼
+Resend broadcast draft
+     │
+     ▼
+Human review → Send
 ```
 
-Open `http://localhost:3000`.
+## Why use multiple model stages?
 
-`PORTFOLIO_MODE=true` is the default. In this mode:
-- no OpenAI API calls are made;
-- no Resend/email calls are made;
-- email entry demonstrates the UI safely;
-- the full sample edition is available at `/example`.
+One of the main design decisions was separating **finding information** from **judging information**.
 
-## Optional future production path
+A single model asked to research and write an edition has an incentive to justify the stories it has already found.
 
-The repository still contains the core code for a two-model discovery/critic workflow (`lib/newsletter.ts`, `lib/prompts.ts`) that can later be wired to OpenAI API web search and an email provider.
+Signal AI instead separates the two responsibilities:
 
-That production path is intentionally **not enabled by default** because the current goal is a no-incremental-cost portfolio project. The user's real twice-weekly briefing is handled by a ChatGPT Scheduled Task instead.
+**Discovery optimises for breadth.  
+Editorial judgement optimises for selectivity.**
 
-## Repository map
+This makes it easier to encode different instructions, model choices and reasoning budgets for each stage.
+
+It also creates a natural place to introduce additional evaluation or verification steps later.
+
+## Engineering considerations
+
+### Reasoning and latency budgets
+
+The two AI stages have different performance requirements.
+
+Discovery benefits from broader search and moderate reasoning because missing an important story is costly. The editorial stage receives a much smaller candidate set and uses a tighter reasoning budget because its task is more constrained.
+
+This keeps the pipeline responsive enough for scheduled serverless execution while reserving model effort for the parts of the workflow where it adds the most value.
+
+The candidate set is also deliberately capped rather than allowing discovery to grow indefinitely. This reduces downstream context size, latency and inference cost while still leaving the editor enough alternatives to reject weak stories.
+
+### Source quality as code
+
+Editorial preferences are encoded explicitly through source priors, prompts, schema constraints and selection rules rather than existing only as informal instructions.
+
+This makes the editorial system more inspectable and easier to iterate on.
+
+### Guarding against AI slop
+
+The system contains explicit negative criteria because generative models will otherwise tend to select stories that are easy to summarise rather than stories that are genuinely useful.
+
+Launch announcements, unsupported claims and duplicated themes therefore carry explicit penalties.
+
+### Structured outputs
+
+The editorial model returns a defined JSON schema.
+
+This separates:
+
+```text
+AI reasoning → content data → presentation
+```
+
+instead of allowing the model to generate arbitrary newsletter HTML.
+
+That makes rendering deterministic and allows the front end, email design and editorial model to change independently.
+
+### Subscriber-scale economics
+
+AI generation happens **once per edition**, not once per subscriber.
+
+Whether an edition is sent to ten people or ten thousand, the expensive research and editorial stages run once and the resulting broadcast is distributed through the email provider.
+
+### Failure visibility
+
+The automated pipeline includes stage-level logging around discovery, criticism, rendering and email creation so failures can be isolated quickly rather than appearing as an opaque cron timeout.
+
+### Human-in-the-loop publishing
+
+Full automation is technically straightforward, but automatic sending has deliberately not been enabled yet.
+
+For an editorial product, generation quality matters more than eliminating the final review click. The current system therefore automates research, selection, writing and draft creation while retaining human approval before publication.
+
+## Repository structure
 
 ```text
 app/
-  page.tsx                 Landing page + email capture UI
-  example/page.tsx         Full sample newsletter
-  api/subscribe/route.ts   Cost-safe portfolio subscription endpoint
+  page.tsx
+      Public landing page and subscription experience
+
+  example/page.tsx
+      Example newsletter edition
+
+  api/
+    subscribe/route.ts
+      Subscriber capture
+
+    cron/newsletter/route.ts
+      Scheduled production pipeline and Resend broadcast creation
+
 lib/
-  sources.ts               Ranked source allowlist + source risks
-  prompts.ts               Scout and critic instructions
-  schema.ts                Structured newsletter schema
-  newsletter.ts            Optional production agent workflow
-SKILL.md                    Public editorial guardrails / agent contract
-docs/EDITORIAL_SYSTEM.md    Architecture and design rationale
+  sources.ts
+      Curated source pool and source metadata
+
+  prompts.ts
+      Discovery and editorial instructions
+
+  schema.ts
+      Structured newsletter output contract
+
+  newsletter.ts
+      Model orchestration and newsletter HTML generation
+
+docs/
+  EDITORIAL_SYSTEM.md
+      Deeper explanation of the editorial architecture
+
+SKILL.md
+      Human-readable editorial rules and constraints
+
+vercel.json
+      Scheduled production job configuration
 ```
 
-## Editorial principles
+## Running locally
 
-Reject by default:
-- launch-only posts;
-- ordinary integrations/partnerships;
-- funding/valuation news without strategic importance;
-- unsupported hype;
-- recycled press releases;
-- SEO/listicle content;
-- stories whose only lesson is that a product launched.
+Install dependencies:
 
-Prefer:
-- original research;
-- independent evaluation;
-- reproducible engineering lessons;
-- measurable capability/cost/reliability changes;
-- concrete safety/security findings;
-- data-rich economics;
-- consequential policy/business developments.
+```bash
+npm install
+```
 
-## Portfolio talking points
+Create the required environment variables and start the development server:
 
-This project is designed to demonstrate more than prompt writing. The interesting engineering/product decisions are:
-- separating high-recall discovery from high-precision editorial judgement;
-- encoding qualitative editorial preferences as auditable constraints;
-- balancing first-party primary evidence with independent sources;
-- keeping AI inference cost independent of subscriber count by generating one edition and broadcasting it;
-- building a zero-cost demo mode so the portfolio project cannot accidentally incur API charges.
+```bash
+npm run dev
+```
 
-## Status
+Then open:
 
-Portfolio prototype. Email delivery and paid model execution are intentionally disabled by default.
+```text
+http://localhost:3000
+```
 
-## Production v1
+Production generation uses environment variables for OpenRouter, Resend and cron authentication. Secrets are kept outside the repository and supplied through the deployment environment.
 
-The recommended first live version captures real subscribers with Resend while keeping AI generation inside the existing ChatGPT scheduled task. This means the site can be genuinely useful without enabling paid OpenAI API calls. See [`docs/PRODUCTION.md`](docs/PRODUCTION.md) for the deployment checklist.
+## Product direction
+
+The current version proves the core loop:
+
+**discover → judge → explain → review → distribute**
+
+Potential next steps include:
+
+- storing previous editions and preventing repeated coverage automatically;
+- tracking which sources and topics consistently survive editorial review;
+- measuring subscriber engagement by story/category;
+- adding stronger fact-verification between selection and publication;
+- using editorial feedback to improve future ranking;
+- publishing a browsable archive alongside email editions;
+- eventually moving from human-approved drafts to automatic sending once quality is sufficiently predictable.
+
+## What this project demonstrates
+
+Signal AI is both a functioning product and an exploration of how AI systems can be designed around **judgement rather than generation alone**.
+
+The more interesting engineering work is not producing prose. It is designing the surrounding system:
+
+- separating agents by responsibility;
+- choosing where higher-cost reasoning is valuable;
+- combining live web research with structured generation;
+- encoding qualitative editorial judgement as constraints;
+- designing anti-hype and source-diversity guardrails;
+- creating observable automated workflows;
+- integrating AI generation with a real subscriber and email-delivery system;
+- deciding where human review remains valuable.
+
+The project reflects a broader approach to building AI products: the model is one component of the system rather than the product itself.
