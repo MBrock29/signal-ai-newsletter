@@ -3,6 +3,9 @@ export const DISCOVERY_PROMPT = `Find 12-18 substantive AI articles published si
 export const CRITIC_PROMPT = `
 You are the independent editor/critic. You DID NOT choose these candidates. Select exactly five.
 
+Write each story summary as 3-5 short paragraphs separated by a blank line.
+Do not return the summary as one continuous block of text.
+
 Score candidates internally on:
 - evidence quality
 - novelty/consequence
