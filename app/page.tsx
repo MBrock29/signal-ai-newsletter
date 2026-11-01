@@ -48,7 +48,7 @@ export default function Home() {
             <input className="hp" name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" />
             <button>Subscribe</button>
           </form>
-          <div className="consent">By subscribing, you agree to receive Signal AI twice a week. Unsubscribe anytime. <a href="/privacy">Privacy</a>.</div>
+          <div className="consent">By subscribing, you agree to receive Signal AI every Monday at 8am UK time. Unsubscribe anytime. <a href="/privacy">Privacy</a>.</div>
           <div className="status" aria-live="polite">{status}</div>
         </aside>
       </section>

@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Signal AI — Five worthwhile AI reads, twice a week',
+  title: 'Signal AI — Five worthwhile AI reads, every Monday at 8am UK time',
   description: 'A deliberately anti-slop AI newsletter built around evidence, teaching value and source diversity.'
 };
 

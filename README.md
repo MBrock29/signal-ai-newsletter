@@ -4,7 +4,7 @@
 
 **Five worthwhile AI reads. About 15 minutes.**
 
-Signal AI is a twice-weekly AI newsletter designed for people who want to understand what is actually changing in AI without following the daily stream of launches, announcements and recycled commentary.
+Signal AI is a weekly AI newsletter designed for people who want to understand what is actually changing in AI without following the daily stream of launches, announcements and recycled commentary.
 
 Each edition selects exactly five stories and turns them into concise, evidence-led explanations covering what happened, why it matters, what can be learned from it and where the evidence is still weak.
 
@@ -125,13 +125,11 @@ Each story contains fields for:
 
 Structured output makes the generation layer easier to validate, render and evolve independently of the presentation layer.
 
-### 4. Email rendering and review
+### 4. Validation and automatic delivery
 
-The structured edition is converted into newsletter HTML and a draft broadcast is created through Resend.
+Every Monday at 8am UK time, the pipeline validates exactly five distinct, non-placeholder stories against Scout citations and checks their allowlisted article links. It renders the edition and automatically sends a Resend Broadcast to the existing subscriber segment, preserving unsubscribe links and topic preferences.
 
-The current workflow intentionally keeps a **human in the loop**: generation and email preparation are automated, while the final edition can be reviewed before sending.
-
-This allows editorial quality to be inspected while the product and selection system are still being refined.
+Each edition's Resend Broadcast doubles as its duplicate check: a broadcast already named for that week stops later runs, including after uncertain send outcomes, and concurrent runs defer to the earliest one. Generation or validation failures send nothing and log the failed stage. See [production setup](docs/PRODUCTION.md) for required environment variables, GMT/BST scheduling and recovery.
 
 ## Technical architecture
 
@@ -143,7 +141,7 @@ Signal AI is built with:
 - **structured model output** — predictable newsletter data;
 - **Resend** — subscribers, topics and broadcast delivery;
 - **Vercel** — hosting, serverless execution and scheduled jobs;
-- **Vercel Cron** — twice-weekly automated edition generation.
+- **Vercel Cron** — weekly automated edition generation.
 
 The production flow is approximately:
 
@@ -169,10 +167,10 @@ Structured newsletter JSON
 HTML renderer
      │
      ▼
-Resend broadcast draft
+Resend broadcast
      │
      ▼
-Human review → Send
+Automatic send
 ```
 
 ## Why use multiple model stages?
@@ -238,11 +236,9 @@ Whether an edition is sent to ten people or ten thousand, the expensive research
 
 The automated pipeline includes stage-level logging around discovery, criticism, rendering and email creation so failures can be isolated quickly rather than appearing as an opaque cron timeout.
 
-### Human-in-the-loop publishing
+### Automatic publishing
 
-Full automation is technically straightforward, but automatic sending has deliberately not been enabled yet.
-
-For an editorial product, generation quality matters more than eliminating the final review click. The current system therefore automates research, selection, writing and draft creation while retaining human approval before publication.
+The weekly edition is sent only after validation. A broadcast already named for that week's edition blocks repeated or uncertain deliveries across deployments.
 
 ## Repository structure
 
@@ -311,7 +307,7 @@ Production generation uses environment variables for OpenRouter, Resend and cron
 
 The current version proves the core loop:
 
-**discover → judge → explain → review → distribute**
+**discover / judge / explain / validate / distribute**
 
 Potential next steps include:
 
@@ -321,7 +317,7 @@ Potential next steps include:
 - adding stronger fact-verification between selection and publication;
 - using editorial feedback to improve future ranking;
 - publishing a browsable archive alongside email editions;
-- eventually moving from human-approved drafts to automatic sending once quality is sufficiently predictable.
+- improving source verification and editorial quality checks.
 
 ## What this project demonstrates
 

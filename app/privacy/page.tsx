@@ -4,7 +4,7 @@ export default function PrivacyPage() {
     <main className="article-shell privacy-page">
       <h1>Privacy</h1>
       <p>Signal AI only collects the email address you submit when you subscribe.</p>
-      <p>We use that address to send the Signal AI newsletter twice a week. Subscriber data is processed by our email delivery provider, Resend. We do not sell subscriber data.</p>
+      <p>We use that address to send the Signal AI newsletter every Monday at 8am UK time. Subscriber data is processed by our email delivery provider, Resend. We do not sell subscriber data.</p>
       <p>Every newsletter includes an unsubscribe link. You can unsubscribe at any time, after which Resend will mark your contact as unsubscribed and future Broadcasts will skip your address.</p>
       <p>If you want your contact record removed entirely, contact the publisher using the contact method provided with the newsletter.</p>
       <p>This policy may be updated if Signal AI adds new features or providers.</p>

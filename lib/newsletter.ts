@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { SOURCES } from './sources';
 import { DISCOVERY_PROMPT, CRITIC_PROMPT } from './prompts';
 import { newsletterSchema } from './schema';
+import { validateEdition, validateStoryLinks } from './validation';
 
 function getClient() {
   if (!process.env.OPENROUTER_API_KEY) {
@@ -11,8 +12,8 @@ function getClient() {
   return new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     baseURL: 'https://openrouter.ai/api/v1',
-    timeout: 180_000,
-    maxRetries: 1,
+    timeout: 110_000,
+    maxRetries: 0,
   });
 }
 
@@ -90,57 +91,19 @@ ${JSON.stringify(SOURCES)}`,
 
   const edition = JSON.parse(judged.output_text);
 
-  if (!edition.items || edition.items.length !== 5) {
-    throw new Error(
-      `Critic returned ${edition.items?.length ?? 0} stories instead of exactly 5.`,
-    );
-  }
-
-  const invalidPatterns = [
-    /awaiting/i,
-    /additional.*story/i,
-    /no fifth story/i,
-    /not a news story/i,
-    /placeholder/i,
-    /story was supplied/i,
-    /no story/i,
-    /requires inventing/i,
-  ];
-
-  const invalidItem = edition.items.find((item: any) => {
-    const combinedText = [
-      item.title,
-      item.publisher,
-      item.summary,
-      item.teachingMoment,
-      item.caveat,
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    return (
-      !item.title ||
-      !item.publisher ||
-      !item.url ||
-      !/^https?:\/\//i.test(item.url) ||
-      !item.summary ||
-      invalidPatterns.some((pattern) => pattern.test(combinedText))
-    );
-  });
-
-  if (invalidItem) {
-    throw new Error(
-      `Critic produced an invalid or placeholder story: ${
-        invalidItem.title || 'Untitled story'
-      }`,
-    );
-  }
+  validateEdition(edition, cited.map(citation => citation.url));
+  await validateStoryLinks(edition);
 
   return edition;
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+}
+
 export function renderHtml(edition: any) {
-  const items = edition.items
+  const items = edition.items.map((item: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(item).map(([key, value]) => [key, typeof value === 'string' ? escapeHtml(value) : value])))
     .map(
       (x: any, i: number) =>
         `<section style="margin:0 0 48px">

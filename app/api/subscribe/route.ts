@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       contactId: data?.id,
-      message: 'You’re subscribed. The next Signal AI edition will arrive twice a week.',
+      message: 'You’re subscribed. The next Signal AI edition will arrive every Monday at 8am UK time.',
     });
   } catch (error) {
     console.error('Subscription route failed:', error);
